@@ -36,11 +36,11 @@ class _NotificationsPageState extends State<NotificationsPage> {
   void initState() {
     super.initState();
     _scrollController.addListener(() {
-      if (_scrollController.position.userScrollDirection == ScrollDirection.reverse) {
-        // Scrolling down
-        if (_scrollController.offset > 200.0 && !_showFeaturedItemAsNormal) {
+      if (_scrollController.position.userScrollDirection == ScrollDirection.forward) {
+        // Scrolling up
+        if (_scrollController.position.pixels == 0 && _showFeaturedItemAsNormal) {
           setState(() {
-            _showFeaturedItemAsNormal = true;
+            _showFeaturedItemAsNormal = false;
           });
         }
       } else if (_scrollController.position.userScrollDirection == ScrollDirection.forward) {
@@ -92,7 +92,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                   itemCount: _showFeaturedItemAsNormal ? state.notifications.length + 3 : state.notifications.length + 4,
                   itemBuilder: (context, index) {
                     if (index == 0) {
-                      return _showFeaturedItemAsNormal ? Container() : _buildFeaturedText();
+                      return _showFeaturedItemAsNormal ? const SizedBox.shrink() : _buildFeaturedText();
                     } else if (index == 1 && !_showFeaturedItemAsNormal) {
                       return _buildFeaturedNotification(context, state.notifications[0]);
                     } else if (index == (_showFeaturedItemAsNormal ? 1 : 3)) {
