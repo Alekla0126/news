@@ -1,4 +1,5 @@
 import '../repositories/notifications_repository.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../models/notification.dart' as model;
 import '../bloc/notifications_bloc.dart';
@@ -7,7 +8,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
 import 'detail_screen.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class NotificationsPage extends StatefulWidget {
   const NotificationsPage({Key? key}) : super(key: key);

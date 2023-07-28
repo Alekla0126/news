@@ -1,9 +1,9 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:news/repositories/notifications_repository.dart';
-import 'bloc/notifications_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'screens/notifications_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
+import 'bloc/notifications_bloc.dart';
 
 void main() {
   runApp(MyApp());
