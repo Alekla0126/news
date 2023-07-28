@@ -1,58 +1,14 @@
 import '../repositories/notifications_repository.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../models/notification.dart' as model;
 import '../bloc/notifications_bloc.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
 import 'detail_screen.dart';
 
-class NotificationsPage extends StatefulWidget {
+class NotificationsPage extends StatelessWidget {
   const NotificationsPage({Key? key}) : super(key: key);
-
-  @override
-  _NotificationsPageState createState() => _NotificationsPageState();
-}
-
-class _NotificationsPageState extends State<NotificationsPage> {
-  final ScrollController _scrollController = ScrollController();
-  final RefreshController _refreshController = RefreshController(initialRefresh: false);
-  bool _showFeaturedItemAsNormal = false;
-
-  void _onRefresh() async{
-    await Future.delayed(const Duration(milliseconds: 1000));
-    if (mounted) {
-      setState(() {
-        _showFeaturedItemAsNormal = true;
-      });
-      context.read<NotificationsBloc>().add(FetchNotifications());
-      _refreshController.refreshCompleted();
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController.addListener(() {
-      if (_scrollController.position.userScrollDirection == ScrollDirection.forward) {
-        // Scrolling up
-        if (_scrollController.position.pixels == 0 && _showFeaturedItemAsNormal) {
-          setState(() {
-            _showFeaturedItemAsNormal = false;
-          });
-        }
-      } else if (_scrollController.position.userScrollDirection == ScrollDirection.forward) {
-        // Scrolling up
-        if (_scrollController.position.extentBefore == 0 && _showFeaturedItemAsNormal) {
-          setState(() {
-            _showFeaturedItemAsNormal = false;
-          });
-        }
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -82,31 +38,32 @@ class _NotificationsPageState extends State<NotificationsPage> {
             } else if (state is NotificationsFailure) {
               return const Center(child: Text('Failed to load notifications'));
             } else if (state is NotificationsSuccess) {
-              return SmartRefresher(
-                controller: _refreshController,
-                enablePullDown: true,
-                header: const MaterialClassicHeader(),  // for material design feel
-                onRefresh: _onRefresh,
-                child: ListView.builder(
-                  controller: _scrollController,
-                  itemCount: _showFeaturedItemAsNormal ? state.notifications.length + 3 : state.notifications.length + 4,
-                  itemBuilder: (context, index) {
-                    if (index == 0) {
-                      return _showFeaturedItemAsNormal ? const SizedBox.shrink() : _buildFeaturedText();
-                    } else if (index == 1 && !_showFeaturedItemAsNormal) {
-                      return _buildFeaturedNotification(context, state.notifications[0]);
-                    } else if (index == (_showFeaturedItemAsNormal ? 1 : 3)) {
-                      return _buildLatestNewsText();
-                    } else if (index == (_showFeaturedItemAsNormal ? 0 : 2)) {
-                      return const SizedBox(height: 16);
+
+              return ListView.builder(
+                itemCount: state.notifications.length + 1, // Add one more to account for the Featured text and notification
+                itemBuilder: (context, index) {
+                  if (index == 0) {
+                    return state.notifications.isNotEmpty
+                        ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,  // Align items to the start (left)
+                      children: [
+                        _buildFeaturedText(),
+                        _buildFeaturedNotification(context, state.notifications[0]),
+                        const SizedBox(height: 16),
+                        _buildLatestNewsText(),
+                      ],
+                    )
+                        : Container();  // Show an empty container if there are no notifications
+                  } else {
+                    if (index < state.notifications.length) {
+                      return _buildNotificationItem(context, state.notifications[index]);
                     } else {
-                      return (state.notifications.length > index - (_showFeaturedItemAsNormal ? 3 : 4))
-                          ? _buildNotificationItem(context, state.notifications[index - (_showFeaturedItemAsNormal ? 3 : 4)])
-                          : Container();  // return empty container when index is out of range
+                      return Container(); // Return an empty container if there's no notifications for these indices
                     }
-                  },
-                ),
+                  }
+                },
               );
+
             }
             // fallback widget in case the state doesn't match any of the above
             return Container();
@@ -117,20 +74,23 @@ class _NotificationsPageState extends State<NotificationsPage> {
   }
 
   Widget _buildFeaturedText() {
-    return const Padding(
-      padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
-      child: Text(
-        'Featured',
-        style: TextStyle(
-          color: Colors.black,
-          fontSize: 20,
-          fontStyle: FontStyle.italic,
-          fontFamily: 'Open Sans',
-          fontWeight: FontWeight.w300,
-          letterSpacing: 0.40,
-          decoration: TextDecoration.none, // Remove underline
-          backgroundColor: Colors.transparent, // Remove background color
-        ),
+    return const Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+        padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
+          child: Text(
+            'Featured',
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 20,
+              fontStyle: FontStyle.italic,
+              fontFamily: 'Open Sans',
+              fontWeight: FontWeight.w300,
+              letterSpacing: 0.40,
+              decoration: TextDecoration.none, // Remove underline
+              backgroundColor: Colors.transparent, // Remove background color
+            ),
+          ),
       ),
     );
   }
@@ -150,40 +110,42 @@ class _NotificationsPageState extends State<NotificationsPage> {
         );
       },
       child: Card(
-        child: Stack(
-          alignment: Alignment.bottomLeft,
-          children: [
-            AspectRatio(
-              aspectRatio: 25/9, // Set the aspect ratio of the picture
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8.0),
-                  image: DecorationImage(
-                    image: NetworkImage(notification.imageUrl),
-                    fit: BoxFit.cover,
-                  ),
+      child: Stack(
+        alignment: Alignment.bottomLeft,
+        children: [
+          AspectRatio(
+            aspectRatio: 25/9, // Set the aspect ratio of the picture
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8.0),
+                image: DecorationImage(
+                  image: NetworkImage(notification.imageUrl),
+                  fit: BoxFit.cover,
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                notification.title,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  backgroundColor: Colors.black.withOpacity(0),
-                ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              notification.title,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                backgroundColor: Colors.black.withOpacity(0),
               ),
             ),
-          ],
-        ),
-      ),);
+          ),
+        ],
+      ),
+    ),);
   }
 
   Widget _buildLatestNewsText() {
-    return const Padding(
+    return const Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
       padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
       child: Text(
         'Latest news',
@@ -197,6 +159,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
           decoration: TextDecoration.none, // Remove underline
         ),
       ),
+    ),
     );
   }
 
@@ -224,58 +187,58 @@ class _NotificationsPageState extends State<NotificationsPage> {
           );
         },
         child: Card(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(
-                  width: 90,
-                  height: 60,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: NetworkImage(notification.imageUrl),
-                        fit: BoxFit.fill,
-                      ),
-                      shape: BoxShape.rectangle,
-                      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 90,
+              height: 60,
+              child: Container(
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: NetworkImage(notification.imageUrl),
+                    fit: BoxFit.fill,
+                  ),
+                  shape: BoxShape.rectangle,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8.0), // Add space between the image and text
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    notification.title,
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                      fontFamily: 'Open Sans',
+                      fontWeight: FontWeight.w400,
+                      letterSpacing: 0.32,
                     ),
                   ),
-                ),
-                const SizedBox(width: 8.0), // Add space between the image and text
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        notification.title,
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontSize: 16,
-                          fontFamily: 'Open Sans',
-                          fontWeight: FontWeight.w400,
-                          letterSpacing: 0.32,
-                        ),
-                      ),
-                      Text(
-                        // Display the number of days since the notification was made
-                        '$daysDifference ${daysDifference == 1 ? 'day ago' : 'days ago'}',
-                        style: const TextStyle(
-                          color: Color(0xFF9A9A9A),
-                          fontSize: 12,
-                          fontFamily: 'Open Sans',
-                          fontWeight: FontWeight.w400,
-                          letterSpacing: 0.24,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    // Display the number of days since the notification was made
+                    '$daysDifference ${daysDifference == 1 ? 'day ago' : 'days ago'}',
+                    style: const TextStyle(
+                      color: Color(0xFF9A9A9A),
+                      fontSize: 12,
+                      fontFamily: 'Open Sans',
+                      fontWeight: FontWeight.w400,
+                      letterSpacing: 0.24,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ),);
+          ],
+        ),
+      ),
+    ),);
     } else {
       // If the notification is marked as read, return an empty container to hide it
       return Container();
