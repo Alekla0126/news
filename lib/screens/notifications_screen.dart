@@ -150,36 +150,36 @@ class _NotificationsPageState extends State<NotificationsPage> {
         );
       },
       child: Card(
-      child: Stack(
-        alignment: Alignment.bottomLeft,
-        children: [
-          AspectRatio(
-            aspectRatio: 25/9, // Set the aspect ratio of the picture
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8.0),
-                image: DecorationImage(
-                  image: NetworkImage(notification.imageUrl),
-                  fit: BoxFit.cover,
+        child: Stack(
+          alignment: Alignment.bottomLeft,
+          children: [
+            AspectRatio(
+              aspectRatio: 25/9, // Set the aspect ratio of the picture
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8.0),
+                  image: DecorationImage(
+                    image: NetworkImage(notification.imageUrl),
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              notification.title,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                backgroundColor: Colors.black.withOpacity(0),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                notification.title,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  backgroundColor: Colors.black.withOpacity(0),
+                ),
               ),
             ),
-          ),
-        ],
-      ),
-    ),);
+          ],
+        ),
+      ),);
   }
 
   Widget _buildLatestNewsText() {
@@ -224,58 +224,58 @@ class _NotificationsPageState extends State<NotificationsPage> {
           );
         },
         child: Card(
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: 90,
-              height: 60,
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: NetworkImage(notification.imageUrl),
-                    fit: BoxFit.fill,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 90,
+                  height: 60,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: NetworkImage(notification.imageUrl),
+                        fit: BoxFit.fill,
+                      ),
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  shape: BoxShape.rectangle,
-                  borderRadius: BorderRadius.circular(12),
                 ),
-              ),
-            ),
-            const SizedBox(width: 8.0), // Add space between the image and text
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    notification.title,
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontSize: 16,
-                      fontFamily: 'Open Sans',
-                      fontWeight: FontWeight.w400,
-                      letterSpacing: 0.32,
-                    ),
+                const SizedBox(width: 8.0), // Add space between the image and text
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        notification.title,
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 16,
+                          fontFamily: 'Open Sans',
+                          fontWeight: FontWeight.w400,
+                          letterSpacing: 0.32,
+                        ),
+                      ),
+                      Text(
+                        // Display the number of days since the notification was made
+                        '$daysDifference ${daysDifference == 1 ? 'day ago' : 'days ago'}',
+                        style: const TextStyle(
+                          color: Color(0xFF9A9A9A),
+                          fontSize: 12,
+                          fontFamily: 'Open Sans',
+                          fontWeight: FontWeight.w400,
+                          letterSpacing: 0.24,
+                        ),
+                      ),
+                    ],
                   ),
-                  Text(
-                    // Display the number of days since the notification was made
-                    '$daysDifference ${daysDifference == 1 ? 'day ago' : 'days ago'}',
-                    style: const TextStyle(
-                      color: Color(0xFF9A9A9A),
-                      fontSize: 12,
-                      fontFamily: 'Open Sans',
-                      fontWeight: FontWeight.w400,
-                      letterSpacing: 0.24,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
-    ),);
+          ),
+        ),);
     } else {
       // If the notification is marked as read, return an empty container to hide it
       return Container();
