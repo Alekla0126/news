@@ -1,5 +1,4 @@
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class DetailScreen extends StatelessWidget {

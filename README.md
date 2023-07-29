@@ -1,6 +1,6 @@
 # Test Flutter App Alekla0126
 
-A new Flutter test.
+A new Flutter test with continuous integration for web.
 
 The API: https://run.mocky.io/v3/71a538e3-e154-4cb3-a38c-17077122fe23
 

@@ -6,11 +6,16 @@ part 'notifications_event.dart';
 
 class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
   final NotificationsRepository notificationsRepository;
+  bool isFirstLoad;
+  bool hasLoadedMore;
 
   NotificationsBloc({required this.notificationsRepository})
-      : super(NotificationsInitial()) {
+      : isFirstLoad = true,
+        hasLoadedMore = false,
+        super(NotificationsInitial()) {
     on<FetchNotifications>(_onFetchNotifications);
     on<DeleteReadNotifications>(_onDeleteReadNotifications);
+    on<LoadMorePressed>(_onLoadMorePressed);
   }
 
   Future<void> _onFetchNotifications(
@@ -37,4 +42,26 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
       emit(NotificationsFailure());
     }
   }
+
+  void _onLoadMorePressed(
+      LoadMorePressed event,
+      Emitter<NotificationsState> emit,
+      ) async {
+    try {
+      List<Notification> moreNotifications = await notificationsRepository.fetchMoreNotifications();
+      if (state is NotificationsSuccess) {
+        List<Notification> allNotifications = List<Notification>.from((state as NotificationsSuccess).notifications)..addAll(moreNotifications);
+        emit(NotificationsSuccess(notifications: allNotifications, loadMorePressed: true, hasMore: moreNotifications.isNotEmpty));
+      }
+    } catch (_) {
+      emit(NotificationsFailure());
+    }
+  }
+}
+
+// Define the event
+class MarkReadNotification extends NotificationsEvent {
+  final String id;
+
+  MarkReadNotification({required this.id});
 }

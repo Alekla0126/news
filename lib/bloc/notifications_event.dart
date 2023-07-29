@@ -9,4 +9,6 @@ class FetchNotifications extends NotificationsEvent {}
 
 class DeleteReadNotifications extends NotificationsEvent {}
 
+class LoadMorePressed extends NotificationsEvent {}
+
 class MarkAllAsRead extends NotificationsEvent {}

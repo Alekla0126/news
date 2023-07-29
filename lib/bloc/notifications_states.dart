@@ -1,22 +1,20 @@
-part of '../bloc/notifications_bloc.dart';
+part of 'notifications_bloc.dart';
 
 abstract class NotificationsState {
   const NotificationsState();
 
+  @override
   List<Object> get props => [];
 }
 
 class NotificationsInitial extends NotificationsState {}
 
-class NotificationsLoading extends NotificationsState {}
-
-class NotificationsFailure extends NotificationsState {}
-
 class NotificationsSuccess extends NotificationsState {
   final List<Notification> notifications;
+  final bool loadMorePressed;
+  final bool hasMore;
 
-  const NotificationsSuccess({required this.notifications});
-
-  @override
-  List<Object> get props => [notifications];
+  NotificationsSuccess({required this.notifications, this.loadMorePressed = false, this.hasMore = false});
 }
+
+class NotificationsFailure extends NotificationsState {}

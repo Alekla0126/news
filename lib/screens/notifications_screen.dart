@@ -7,8 +7,15 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'detail_screen.dart';
 
-class NotificationsPage extends StatelessWidget {
+class NotificationsPage extends StatefulWidget {
   const NotificationsPage({Key? key}) : super(key: key);
+
+  @override
+  _NotificationsPageState createState() => _NotificationsPageState();
+}
+
+class _NotificationsPageState extends State<NotificationsPage> {
+  bool _showNewsOnly = false;
 
   @override
   Widget build(BuildContext context) {
@@ -17,9 +24,7 @@ class NotificationsPage extends StatelessWidget {
       navigationBar: CupertinoNavigationBar(
         leading: CupertinoNavigationBarBackButton(
           previousPageTitle: 'Back',
-          onPressed: () {
-            // Navigator.of(context).pop();
-          },
+          onPressed: () {},
         ),
         middle: const Text('Notifications'),
         trailing: GestureDetector(
@@ -29,46 +34,63 @@ class NotificationsPage extends StatelessWidget {
           child: const Text('Mark all read'),
         ),
       ),
-      child: BlocProvider(
-        create: (context) => NotificationsBloc(notificationsRepository: notificationsRepository)..add(FetchNotifications()),
-        child: BlocBuilder<NotificationsBloc, NotificationsState>(
-          builder: (context, state) {
-            if (state is NotificationsInitial) {
-              return const Center(child: CupertinoActivityIndicator());
-            } else if (state is NotificationsFailure) {
-              return const Center(child: Text('Failed to load notifications'));
-            } else if (state is NotificationsSuccess) {
-
-              return ListView.builder(
-                itemCount: state.notifications.length + 1, // Add one more to account for the Featured text and notification
-                itemBuilder: (context, index) {
-                  if (index == 0) {
-                    return state.notifications.isNotEmpty
-                        ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,  // Align items to the start (left)
-                      children: [
-                        _buildFeaturedText(),
-                        _buildFeaturedNotification(context, state.notifications[0]),
-                        const SizedBox(height: 16),
-                        _buildLatestNewsText(),
-                      ],
-                    )
-                        : Container();  // Show an empty container if there are no notifications
-                  } else {
-                    if (index < state.notifications.length) {
-                      return _buildNotificationItem(context, state.notifications[index]);
-                    } else {
-                      return Container(); // Return an empty container if there's no notifications for these indices
-                    }
-                  }
-                },
-              );
-
-            }
-            // fallback widget in case the state doesn't match any of the above
-            return Container();
-          },
-        ),
+      child: Stack(
+        children: <Widget>[
+          BlocProvider(
+            create: (context) => NotificationsBloc(notificationsRepository: notificationsRepository)..add(FetchNotifications()),
+            child: BlocBuilder<NotificationsBloc, NotificationsState>(
+              builder: (context, state) {
+                if (state is NotificationsInitial && !_showNewsOnly) {
+                  return const Center(child: CupertinoActivityIndicator());
+                } else if (state is NotificationsFailure) {
+                  return const Center(child: Text('Failed to load notifications'));
+                } else if (state is NotificationsSuccess) {
+                  return ListView.builder(
+                    itemCount: _showNewsOnly ? state.notifications.length : state.notifications.length + 1,
+                    itemBuilder: (context, index) {
+                      if (_showNewsOnly) {
+                        return _buildNotificationItem(context, state.notifications[index]);
+                      } else {
+                        if (index == 0) {
+                          return state.notifications.isNotEmpty
+                              ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildFeaturedText(),
+                              _buildFeaturedNotification(context, state.notifications[0]),
+                              const SizedBox(height: 16),
+                              _buildLatestNewsText(),
+                            ],
+                          )
+                              : Container();
+                        } else {
+                          if (index < state.notifications.length) {
+                            return _buildNotificationItem(context, state.notifications[index]);
+                          } else {
+                            return Container();
+                          }
+                        }
+                      }
+                    },
+                  );
+                }
+                return Container();
+              },
+            ),
+          ),
+          Positioned(
+            right: 20,
+            bottom: 20,
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _showNewsOnly = !_showNewsOnly;
+                });
+              },
+              child: Icon(_showNewsOnly ? CupertinoIcons.back : CupertinoIcons.arrow_up, size: 56),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -78,19 +100,19 @@ class NotificationsPage extends StatelessWidget {
       alignment: Alignment.centerLeft,
       child: Padding(
         padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
-          child: Text(
-            'Featured',
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 20,
-              fontStyle: FontStyle.italic,
-              fontFamily: 'Open Sans',
-              fontWeight: FontWeight.w300,
-              letterSpacing: 0.40,
-              decoration: TextDecoration.none, // Remove underline
-              backgroundColor: Colors.transparent, // Remove background color
-            ),
+        child: Text(
+          'Featured',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+            fontStyle: FontStyle.italic,
+            fontFamily: 'Open Sans',
+            fontWeight: FontWeight.w300,
+            letterSpacing: 0.40,
+            decoration: TextDecoration.none, // Remove underline
+            backgroundColor: Colors.transparent, // Remove background color
           ),
+        ),
       ),
     );
   }
@@ -110,56 +132,57 @@ class NotificationsPage extends StatelessWidget {
         );
       },
       child: Card(
-      child: Stack(
-        alignment: Alignment.bottomLeft,
-        children: [
-          AspectRatio(
-            aspectRatio: 25/9, // Set the aspect ratio of the picture
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8.0),
-                image: DecorationImage(
-                  image: NetworkImage(notification.imageUrl),
-                  fit: BoxFit.cover,
+        child: Stack(
+          alignment: Alignment.bottomLeft,
+          children: [
+            AspectRatio(
+              aspectRatio: 25/9, // Set the aspect ratio of the picture
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8.0),
+                  image: DecorationImage(
+                    image: NetworkImage(notification.imageUrl),
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              notification.title,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                backgroundColor: Colors.black.withOpacity(0),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                notification.title,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  backgroundColor: Colors.black.withOpacity(0.5),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),);
+    );
   }
 
   Widget _buildLatestNewsText() {
     return const Align(
       alignment: Alignment.centerLeft,
       child: Padding(
-      padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
-      child: Text(
-        'Latest news',
-        style: TextStyle(
-          color: Colors.black,
-          fontSize: 20,
-          fontStyle: FontStyle.italic,
-          fontFamily: 'Open Sans',
-          fontWeight: FontWeight.w300,
-          letterSpacing: 0.40,
-          decoration: TextDecoration.none, // Remove underline
+        padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
+        child: Text(
+          'Latest news',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+            fontStyle: FontStyle.italic,
+            fontFamily: 'Open Sans',
+            fontWeight: FontWeight.w300,
+            letterSpacing: 0.40,
+            decoration: TextDecoration.none, // Remove underline
+          ),
         ),
       ),
-    ),
     );
   }
 
@@ -187,58 +210,59 @@ class NotificationsPage extends StatelessWidget {
           );
         },
         child: Card(
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: 90,
-              height: 60,
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: NetworkImage(notification.imageUrl),
-                    fit: BoxFit.fill,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 90,
+                  height: 60,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: NetworkImage(notification.imageUrl),
+                        fit: BoxFit.fill,
+                      ),
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  shape: BoxShape.rectangle,
-                  borderRadius: BorderRadius.circular(12),
                 ),
-              ),
-            ),
-            const SizedBox(width: 8.0), // Add space between the image and text
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    notification.title,
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontSize: 16,
-                      fontFamily: 'Open Sans',
-                      fontWeight: FontWeight.w400,
-                      letterSpacing: 0.32,
-                    ),
+                const SizedBox(width: 8.0), // Add space between the image and text
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        notification.title,
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 16,
+                          fontFamily: 'Open Sans',
+                          fontWeight: FontWeight.w400,
+                          letterSpacing: 0.32,
+                        ),
+                      ),
+                      Text(
+                        // Display the number of days since the notification was made
+                        '$daysDifference ${daysDifference == 1 ? 'day ago' : 'days ago'}',
+                        style: const TextStyle(
+                          color: Color(0xFF9A9A9A),
+                          fontSize: 12,
+                          fontFamily: 'Open Sans',
+                          fontWeight: FontWeight.w400,
+                          letterSpacing: 0.24,
+                        ),
+                      ),
+                    ],
                   ),
-                  Text(
-                    // Display the number of days since the notification was made
-                    '$daysDifference ${daysDifference == 1 ? 'day ago' : 'days ago'}',
-                    style: const TextStyle(
-                      color: Color(0xFF9A9A9A),
-                      fontSize: 12,
-                      fontFamily: 'Open Sans',
-                      fontWeight: FontWeight.w400,
-                      letterSpacing: 0.24,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
-      ),
-    ),);
+      );
     } else {
       // If the notification is marked as read, return an empty container to hide it
       return Container();
