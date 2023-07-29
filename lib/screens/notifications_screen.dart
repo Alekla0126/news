@@ -45,7 +45,14 @@ class _NotificationsPageState extends State<NotificationsPage> {
                 } else if (state is NotificationsFailure) {
                   return const Center(child: Text('Failed to load notifications'));
                 } else if (state is NotificationsSuccess) {
-                  return ListView.builder(
+                  return RefreshIndicator(
+                    onRefresh: () async {
+                      setState(() {
+                        _showNewsOnly = !_showNewsOnly;
+                      });
+                      context.read<NotificationsBloc>().add(FetchNotifications());
+                    },
+                  child: ListView.builder(
                     itemCount: _showNewsOnly ? state.notifications.length : state.notifications.length + 1,
                     itemBuilder: (context, index) {
                       if (_showNewsOnly) {
@@ -72,7 +79,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                         }
                       }
                     },
-                  );
+                  ),);
                 }
                 return Container();
               },
@@ -152,10 +159,10 @@ class _NotificationsPageState extends State<NotificationsPage> {
               padding: const EdgeInsets.all(8.0),
               child: Text(
                 notification.title,
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 20,
-                  backgroundColor: Colors.black.withOpacity(0.5),
+                  backgroundColor: Colors.transparent,
                 ),
               ),
             ),
